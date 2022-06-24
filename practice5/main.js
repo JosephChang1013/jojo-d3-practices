@@ -51,7 +51,7 @@ function filterData(data) {
         }
     );
 }
-
+// prepare DATA的型別 符合d3風格 
 function prepareLineChartData(data) {
     //取得發行年份
     const groupByYear = d => d.release_year;
@@ -87,6 +87,7 @@ function prepareLineChartData(data) {
                 values: budgetArray.map(d => ({ date: parseYear(d[0]), value: d[1] }))
             }
         ],
+        // x軸為時間格式,y軸為revenue value 
         dates: dates,
         yMax: yMax
     }
@@ -108,7 +109,7 @@ function formatTicks(d) {
 
 
 
-
+// setupCanvas 主要處理一些畫面上的物件
 function setupCanvas(lineChartData) {
     const svg_width = 400;
     const svg_height = 500;
@@ -122,6 +123,7 @@ function setupCanvas(lineChartData) {
     //scale
     //用時間來做X軸
     const xExtent = d3.extent(lineChartData.dates);
+    // 抓出最小時間:(2000) 與 最大時間:(2009)
     const xScale = d3.scaleTime().domain(xExtent).range([0, chart_width]);
     //垂直空間的分配 - 平均分布給各種類
     const yScale = d3.scaleLinear().domain([0, lineChartData.yMax]).range([chart_height, 0]);
@@ -138,32 +140,39 @@ function setupCanvas(lineChartData) {
     //Draw header 加上標題 x軸,y軸
     //Draw Line
     const chartGroup = this_svg.append('g').attr('class', 'line-chart');
+
     chartGroup.selectAll('.line-series').data(lineChartData.series).enter()
         .append('path')
         .attr('class', d => `line-series ${d.name.toLowerCase()}`)
         .attr('d', d => lineGen(d.values))
         .style('fill', 'none').style('stroke', d => d.color);
     //Draw X axis
-    const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
+    const xAxis = d3.axisBottom(xScale);
+    // const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
     this_svg.append('g').attr('class', 'x axis')
         .attr('transform', `translate(0,${chart_height})`)
         .call(xAxis);
     //Draw Y axis
     const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(formatTicks)
-        .tickSizeInner(-chart_width).tickSizeOuter(0);
+        .tickSizeInner(-chart_width);
+        // const yAxis = d3.axisLeft(yScale).ticks(5).tickFormat(formatTicks)
+        // .tickSizeInner(-chart_width).tickSizeOuter(0);    
     this_svg.append('g').attr('class', 'y axis').call(yAxis);
 
 
     //Draw Series Label
     //放在最後一個點的旁邊(x+5,y不變)
-    chartGroup.append('g').attr('class', 'series-labels')
+    chartGroup.append('g').attr('class', 'series-labels')// enter(): 將參數顯示在畫面
         .selectAll('.series-label').data(lineChartData.series).enter()
         .append('text')
+        // 增加線上文字標題的位置:最後一個點 X向右平移,Y高度不變
         .attr('x', d => xScale(d.values[d.values.length - 1].date) + 5)
         .attr('y', d => yScale(d.values[d.values.length - 1].value))
         .text(d => d.name)
+        // 線中心跟字的中心對齊
         .style('dominant-baseline', 'central')
         .style('font-size', '0.7em').style('font-weight', 'bold')
+        // 字的顏色,沿用線的顏色
         .style('fill', d => d.color);
 
 
